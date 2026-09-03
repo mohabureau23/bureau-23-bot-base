@@ -65,6 +65,7 @@ function readEnv() {
 
     // API HTTP (mini-site admin + Bureau 23 Hub)
     port: Number.isFinite(port) ? port : 8081,
+    host,
     publicBaseUrl: (process.env.PUBLIC_BASE_URL?.trim() || `http://localhost:${port}`).replace(/\/+$/, ""),
     adminApiSecret: process.env.ADMIN_API_SECRET?.trim() || null,
     hubApiSecret: process.env.HUB_API_SECRET?.trim() || null,
