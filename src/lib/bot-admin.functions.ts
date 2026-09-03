@@ -36,17 +36,19 @@ export const adminLogin = createServerFn({ method: "POST" })
 export const listChannels = createServerFn({ method: "POST" })
   .inputValidator((data: { password: string }) => data)
   .handler(async ({ data }) => {
+    type Result = { channels: { id: string; name: string }[]; error?: string };
     const error = checkPassword(data.password);
-    if (error) return { channels: [] as { id: string; name: string }[], error };
+    if (error) return { channels: [], error } satisfies Result;
     try {
-      return (await botFetch("/api/admin/channels")) as { channels: { id: string; name: string }[] };
+      return (await botFetch("/api/admin/channels")) as Result;
     } catch (err) {
       return {
-        channels: [] as { id: string; name: string }[],
+        channels: [],
         error: err instanceof Error ? err.message : "Bot injoignable",
-      };
+      } satisfies Result;
     }
   });
+
 
 
 export const botStatus = createServerFn({ method: "POST" })
