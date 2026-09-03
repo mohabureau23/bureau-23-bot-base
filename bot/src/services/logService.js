@@ -7,6 +7,7 @@ import { baseEmbed, COLORS } from "../utils/embeds.js";
  * Toute erreur d'envoi est absorbée pour ne jamais casser le flux principal.
  */
 async function fetchLogChannel(client) {
+  if (!env.logChannelId) return null;
   try {
     const channel = await client.channels.fetch(env.logChannelId);
     if (!channel?.isTextBased?.()) return null;

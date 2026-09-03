@@ -120,3 +120,23 @@ RAM : le bot tourne dans ~100–150 Mo. Un plan à 128 Mo est trop juste,
 prévoir 256 Mo minimum. Si le panel affiche « mémoire insuffisante » alors que
 le bot n'a même pas démarré, c'est `npm install` qui sature la limite :
 augmenter la RAM ou uploader `node_modules` déjà installé.
+
+## Installation « prête à l'emploi » (ACL Clouds / Pterodactyl)
+
+1. Téléverse le contenu de `bureau23-bot.zip` **à la racine** de `/home/container`
+   (on doit voir `package.json`, `index.js`, `src/` directement à la racine).
+2. Panel : **Additional npm packages** = vide, **Install command** = `npm install`,
+   **Main File** = `index.js`, **Startup** = `node /home/container/index.js`.
+3. Onglet **Startup / Variables**, ajoute :
+   - `DISCORD_TOKEN` (Dev Portal > Bot > Reset Token)
+   - `DISCORD_CLIENT_ID` (Dev Portal > General Information > Application ID)
+   - `DISCORD_GUILD_ID` = 1544692138644869130
+   - `WELCOME_CHANNEL_ID` = 1544708762575569017
+   - `MEMBER_ROLE_ID` = 1544720037984862379
+   - `LOG_CHANNEL_ID` = 1544874720946561035
+4. Démarre. Les slash commands sont **enregistrées automatiquement** au démarrage :
+   plus besoin de lancer `npm run deploy:commands`.
+
+Si le token ou le client ID manquent, le bot affiche un message explicite en console
+au lieu de planter sans explication. Les IDs de salons/rôle sont optionnels : sans eux
+le bot démarre quand même, seules les fonctions concernées sont désactivées.

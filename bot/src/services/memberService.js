@@ -5,6 +5,7 @@ import { baseEmbed, COLORS } from "../utils/embeds.js";
 
 /** Attribue le rôle « 🌐 MEMBRE » (MEMBER_ROLE_ID) à un nouvel arrivant. */
 export async function assignMemberRole(member) {
+  if (!env.memberRoleId) return false;
   try {
     const role = member.guild.roles.cache.get(env.memberRoleId)
       ?? (await member.guild.roles.fetch(env.memberRoleId));
@@ -36,6 +37,7 @@ export async function assignMemberRole(member) {
 
 /** Message de bienvenue dans WELCOME_CHANNEL_ID. */
 export async function sendWelcomeMessage(member) {
+  if (!env.welcomeChannelId) return false;
   try {
     const channel = await member.client.channels.fetch(env.welcomeChannelId);
     if (!channel?.isTextBased?.()) {
