@@ -97,3 +97,26 @@ Créer `src/commands/<catégorie>/<nom>.js` exportant par défaut
 Le chargement est automatique ; pour une commande staff, utiliser
 `.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)` (ou une permission
 plus fine) — jamais `Administrator` par défaut.
+
+## Hébergement Pterodactyl / ACL Clouds
+
+L'erreur `EALLOWGIT ... Refusing to fetch "github:src/index.js"` ne vient pas du code :
+le panel passe `src/index.js` à `npm install` (champ « Additional/Extra npm packages »
+ou « Install packages »). Configuration correcte :
+
+| Champ du panel | Valeur |
+| --- | --- |
+| Git Repo / branche | ton dépôt (dossier `bot` uniquement) |
+| Main File / JS File | `index.js` (wrapper fourni) ou `src/index.js` |
+| Additional npm packages | **vide** |
+| Startup command | `node /home/container/index.js` ou `npm start` |
+| Install command | `npm install` (sans argument) |
+
+Les fichiers du dossier `bot/` doivent être à la racine de `/home/container`
+(donc `package.json`, `index.js`, `src/`). Ajouter ensuite les variables
+d'environnement du tableau ci-dessus dans l'onglet Startup/Variables.
+
+RAM : le bot tourne dans ~100–150 Mo. Un plan à 128 Mo est trop juste,
+prévoir 256 Mo minimum. Si le panel affiche « mémoire insuffisante » alors que
+le bot n'a même pas démarré, c'est `npm install` qui sature la limite :
+augmenter la RAM ou uploader `node_modules` déjà installé.
