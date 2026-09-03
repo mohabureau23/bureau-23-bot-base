@@ -45,7 +45,10 @@ function readEnv() {
 
   const missingOptional = OPTIONAL.filter((key) => !process.env[key]?.trim());
 
-  const port = Number(process.env.PORT?.trim() || 8081);
+  // Les hébergeurs fournissent le port : PORT (Render) ou SERVER_PORT (Pterodactyl/ACL Clouds).
+  const port = Number(process.env.PORT?.trim() || process.env.SERVER_PORT?.trim() || 8081);
+  // Écoute sur toutes les interfaces, sinon le proxy de l'hébergeur renvoie 502.
+  const host = process.env.HOST?.trim() || process.env.SERVER_IP?.trim() || "0.0.0.0";
 
   return {
     token: process.env.DISCORD_TOKEN.trim(),
@@ -62,6 +65,7 @@ function readEnv() {
 
     // API HTTP (mini-site admin + Bureau 23 Hub)
     port: Number.isFinite(port) ? port : 8081,
+    host,
     publicBaseUrl: (process.env.PUBLIC_BASE_URL?.trim() || `http://localhost:${port}`).replace(/\/+$/, ""),
     adminApiSecret: process.env.ADMIN_API_SECRET?.trim() || null,
     hubApiSecret: process.env.HUB_API_SECRET?.trim() || null,
@@ -88,6 +92,7 @@ export function safeEnvSummary() {
     staffRoleId: env.staffRoleId,
     ticketCategoryId: env.ticketCategoryId,
     port: env.port,
+    host: env.host,
     publicBaseUrl: env.publicBaseUrl,
     adminApiSecret: env.adminApiSecret ? "***set***" : null,
     hubApiSecret: env.hubApiSecret ? "***set***" : null,
