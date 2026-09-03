@@ -193,6 +193,8 @@ export function startHttpServer(client) {
     }
   });
 
-  server.listen(env.port, () => logger.info(`API HTTP à l'écoute sur le port ${env.port}`));
+  server.listen(env.port, env.host, () =>
+    logger.info(`API HTTP à l'écoute sur ${env.host}:${env.port} (public : ${env.publicBaseUrl})`),
+  );
   return server;
 }
