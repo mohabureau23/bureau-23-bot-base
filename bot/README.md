@@ -140,3 +140,16 @@ augmenter la RAM ou uploader `node_modules` déjà installé.
 Si le token ou le client ID manquent, le bot affiche un message explicite en console
 au lieu de planter sans explication. Les IDs de salons/rôle sont optionnels : sans eux
 le bot démarre quand même, seules les fonctions concernées sont désactivées.
+
+## Déploiement via GitHub (ACL Clouds relié au dépôt)
+
+Le bot vit dans le sous-dossier `bot/` du dépôt (la racine contient le site Hub).
+Le panel doit donc pointer vers ce sous-dossier :
+
+- **Install command** : `cd /home/container/bot && npm install --omit=dev`
+- **Startup command** : `sh /home/container/start-bot.sh`
+  (ce script fait le `cd bot`, installe si besoin, puis lance `node index.js`)
+- **Main File** : `bot/index.js`
+- **Additional npm packages** : vide
+
+Ensuite, chaque `git pull` du panel récupère automatiquement les mises à jour du code.
