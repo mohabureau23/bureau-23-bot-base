@@ -92,6 +92,7 @@ export function safeEnvSummary() {
     staffRoleId: env.staffRoleId,
     ticketCategoryId: env.ticketCategoryId,
     port: env.port,
+    host: env.host,
     publicBaseUrl: env.publicBaseUrl,
     adminApiSecret: env.adminApiSecret ? "***set***" : null,
     hubApiSecret: env.hubApiSecret ? "***set***" : null,
