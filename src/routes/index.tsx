@@ -57,13 +57,18 @@ function Index() {
     event.preventDefault();
     setError(null);
     try {
-      await login({ data: { password } });
+      const result = await login({ data: { password } });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
       setAuthed(true);
-      const [{ channels: list }, botState] = await Promise.all([
+      const [{ channels: list, error: channelsError }, botState] = await Promise.all([
         fetchChannels({ data: { password } }),
         fetchStatus({ data: { password } }).catch(() => null),
       ]);
       setChannels(list);
+      if (channelsError) setError(channelsError);
       if (list[0]) setChannelId(list[0].id);
       if (botState) setStatus(botState);
     } catch (err) {
@@ -79,11 +84,16 @@ function Index() {
       const result = await send({
         data: { password, channelId, title, description, color, footer, image, buttons },
       });
+      if (!result.ok) {
+        setError(result.error ?? "Envoi impossible");
+        return;
+      }
       setNotice(`Embed envoyé dans #${result.channelName}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Envoi impossible");
     }
   }
+
 
   const field = "w-full rounded-md border border-border bg-background px-3 py-2 text-sm";
 

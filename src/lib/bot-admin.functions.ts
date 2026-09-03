@@ -17,36 +17,54 @@ async function botFetch(path: string, init?: RequestInit) {
   return response.json();
 }
 
-function checkPassword(password: string) {
+/** Retourne un message d'erreur lisible plutôt que de casser le rendu. */
+function checkPassword(password: string): string | null {
   const expected = process.env["ADMIN_PASSWORD"];
-  if (!expected) throw new Error("ADMIN_PASSWORD non configuré.");
-  if (password !== expected) throw new Error("Mot de passe administrateur invalide.");
+  if (!expected)
+    return "ADMIN_PASSWORD n'est pas configuré côté serveur. Ajoute-le dans les variables d'environnement du projet.";
+  if (password !== expected) return "Mot de passe administrateur invalide.";
+  return null;
 }
 
 export const adminLogin = createServerFn({ method: "POST" })
   .inputValidator((data: { password: string }) => data)
   .handler(async ({ data }) => {
-    checkPassword(data.password);
-    return { ok: true };
+    const error = checkPassword(data.password);
+    return error ? { ok: false as const, error } : { ok: true as const };
   });
 
 export const listChannels = createServerFn({ method: "POST" })
   .inputValidator((data: { password: string }) => data)
   .handler(async ({ data }) => {
-    checkPassword(data.password);
-    return (await botFetch("/api/admin/channels")) as { channels: { id: string; name: string }[] };
+    type Result = { channels: { id: string; name: string }[]; error?: string };
+    const error = checkPassword(data.password);
+    if (error) return { channels: [], error } satisfies Result;
+    try {
+      return (await botFetch("/api/admin/channels")) as Result;
+    } catch (err) {
+      return {
+        channels: [],
+        error: err instanceof Error ? err.message : "Bot injoignable",
+      } satisfies Result;
+    }
   });
+
+
 
 export const botStatus = createServerFn({ method: "POST" })
   .inputValidator((data: { password: string }) => data)
   .handler(async ({ data }) => {
-    checkPassword(data.password);
-    return (await botFetch("/api/admin/status")) as {
-      ready: boolean;
-      tag: string | null;
-      uptimeSeconds: number;
-      commands: number;
-    };
+    if (checkPassword(data.password)) return null;
+    try {
+      return (await botFetch("/api/admin/status")) as {
+        ready: boolean;
+        tag: string | null;
+        uptimeSeconds: number;
+        commands: number;
+      };
+    } catch {
+      return null;
+    }
   });
 
 export type EmbedButton = { type: "url" | "ticket"; label: string; url?: string };
@@ -65,10 +83,20 @@ export const sendEmbed = createServerFn({ method: "POST" })
     }) => data,
   )
   .handler(async ({ data }) => {
-    checkPassword(data.password);
+    const error = checkPassword(data.password);
+    if (error) return { ok: false as const, channelName: "", error };
     const { password: _password, ...payload } = data;
-    return (await botFetch("/api/admin/embed", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    })) as { ok: boolean; channelName: string };
+    try {
+      return (await botFetch("/api/admin/embed", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      })) as { ok: boolean; channelName: string; error?: string };
+    } catch (err) {
+      return {
+        ok: false as const,
+        channelName: "",
+        error: err instanceof Error ? err.message : "Bot injoignable",
+      };
+    }
   });
+
