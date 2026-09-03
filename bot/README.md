@@ -153,3 +153,35 @@ Le panel doit donc pointer vers ce sous-dossier :
 - **Additional npm packages** : vide
 
 Ensuite, chaque `git pull` du panel récupère automatiquement les mises à jour du code.
+
+## V2 — Témoignages, tickets et mini-site admin
+
+Nouvelles variables (voir `.env.example`) : `TESTIMONIAL_CHANNEL_ID`, `STAFF_ROLE_ID`,
+`TICKET_CATEGORY_ID` (optionnel), `PORT`, `PUBLIC_BASE_URL`, `ADMIN_API_SECRET`,
+`HUB_API_SECRET`, `TESTIMONIAL_TOKEN_SECRET`.
+
+Le bot expose une petite API HTTP (`node:http`, aucune dépendance ajoutée) :
+
+| Route | Auth | Usage |
+| --- | --- | --- |
+| `GET /health` | — | supervision |
+| `GET/POST /t/<jeton>` | jeton signé HMAC | formulaire de témoignage, usage unique, 7 jours |
+| `POST /api/orders/complete` | header `x-hub-secret` | Bureau 23 Hub signale une commande terminée (`orderId`, `discordUserId?`, `clientName?`) → renvoie `testimonialUrl` |
+| `GET /api/admin/channels`, `GET /api/admin/status`, `POST /api/admin/embed` | header `x-admin-secret` | mini-site admin |
+
+Commandes staff (rôle `STAFF_ROLE_ID`, jamais Administrator) : `/terminer-commande`
+(détecte le client du salon `commande-pseudo`, publie le bouton témoignage) et
+`/annuler-temoignage` (invalide les liens d'une référence).
+
+Boutons « Ticket » (`customId: ticket:open`) : création d'un salon `ticket-pseudo`
+privé (membre + staff, `@everyone` refusé) — nécessite la permission
+« Gérer les salons » pour le bot.
+
+Persistance : aucune base de données. Les jetons sont signés (HMAC) et le registre
+d'usage unique est en mémoire — un redémarrage du bot le remet à zéro (un lien déjà
+utilisé pourrait redevenir valide jusqu'à son expiration). Sans
+`TESTIMONIAL_TOKEN_SECRET`, une clé éphémère est générée : tous les liens deviennent
+invalides au redémarrage.
+
+Côté mini-site (ce dépôt, racine) : variables serveur `BOT_API_URL`,
+`ADMIN_API_SECRET`, `ADMIN_PASSWORD`. Le navigateur ne voit jamais `DISCORD_TOKEN`.

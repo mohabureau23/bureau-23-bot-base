@@ -4,6 +4,7 @@ import { Client, Collection, GatewayIntentBits, Partials } from "discord.js";
 import { env, safeEnvSummary } from "./config/env.js";
 import { loadModules } from "./utils/loadModules.js";
 import { logger } from "./utils/logger.js";
+import { startHttpServer } from "./http/server.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -60,6 +61,7 @@ for (const signal of ["SIGINT", "SIGTERM"]) {
 async function start() {
   await registerCommands();
   await registerEvents();
+  startHttpServer(client);
   await client.login(env.token); // le token n'est jamais journalisé
 }
 
