@@ -60,7 +60,8 @@ function readEnv() {
 
     // Témoignages / staff / tickets
     testimonialChannelId: process.env.TESTIMONIAL_CHANNEL_ID?.trim() || null,
-    staffRoleId: process.env.STAFF_ROLE_ID?.trim() || null,
+    // Rôle staff BUREAU 23 par défaut si la variable n'est pas fournie par l'hébergeur.
+    staffRoleId: process.env.STAFF_ROLE_ID?.trim() || "1544719817909600357",
     ticketCategoryId: process.env.TICKET_CATEGORY_ID?.trim() || null,
 
     // API HTTP (mini-site admin + Bureau 23 Hub)
