@@ -97,6 +97,13 @@ export async function createTicketChannel(guild, member) {
 
 /** Vrai si le membre possède le rôle staff configuré. */
 export function isStaff(member) {
-  if (!env.staffRoleId) return false;
-  return Boolean(member?.roles?.cache?.has(env.staffRoleId));
+  if (!env.staffRoleId || !member) return false;
+  const roles = member.roles;
+  // Selon la source (interaction, cache partiel, API brute), roles est un
+  // GuildMemberRoleManager, une Collection, ou un simple tableau d'IDs.
+  if (roles?.cache?.has?.(env.staffRoleId)) return true;
+  if (typeof roles?.has === "function" && roles.has(env.staffRoleId)) return true;
+  if (Array.isArray(roles) && roles.includes(env.staffRoleId)) return true;
+  if (Array.isArray(roles?.valueOf?.()) && roles.valueOf().includes(env.staffRoleId)) return true;
+  return false;
 }
