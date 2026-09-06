@@ -48,7 +48,9 @@ function readEnv() {
   // Les hébergeurs fournissent le port : PORT (Render) ou SERVER_PORT (Pterodactyl/ACL Clouds).
   const port = Number(process.env.PORT?.trim() || process.env.SERVER_PORT?.trim() || 8081);
   // Écoute sur toutes les interfaces, sinon le proxy de l'hébergeur renvoie 502.
-  const host = process.env.HOST?.trim() || process.env.SERVER_IP?.trim() || "0.0.0.0";
+  // Ne pas utiliser SERVER_IP : l'IP interne de l'hébergeur n'est pas toujours
+  // bindable (EADDRNOTAVAIL). 0.0.0.0 fonctionne derrière le proxy dans tous les cas.
+  const host = process.env.HOST?.trim() || "0.0.0.0";
 
   return {
     token: process.env.DISCORD_TOKEN.trim(),
