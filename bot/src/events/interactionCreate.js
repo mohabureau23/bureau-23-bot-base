@@ -95,8 +95,14 @@ export default {
   async execute(interaction) {
     if (interaction.isButton()) {
       if (interaction.customId === "ticket:open") await handleTicketButton(interaction);
+      else if (interaction.customId === "ticket:claim") await handleTicketClaim(interaction);
+      else if (interaction.customId === "ticket:close") await handleTicketClose(interaction);
+      else if (interaction.customId === "ticket:close:confirm") await handleTicketCloseConfirm(interaction);
+      else if (interaction.customId === "ticket:close:cancel")
+        await interaction.update({ content: "Fermeture annulée.", components: [] });
       return;
     }
+
 
     if (!interaction.isChatInputCommand()) return;
 
