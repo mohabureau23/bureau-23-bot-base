@@ -1,7 +1,66 @@
-import { Events, MessageFlags } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Events, MessageFlags, PermissionFlagsBits } from "discord.js";
 import { logger } from "../utils/logger.js";
 import { logError, logInfo } from "../services/logService.js";
 import { createTicketChannel } from "../services/ticketService.js";
+import { env } from "../config/env.js";
+
+/** Autorisé si membre listé dans les permissions du salon ticket, rôle staff, ou admin. */
+function canManageTicket(interaction) {
+  const member = interaction.member;
+  if (!member) return false;
+  if (member.permissions?.has?.(PermissionFlagsBits.Administrator)) return true;
+  if (env.staffRoleId && member.roles?.cache?.has?.(env.staffRoleId)) return true;
+  const overwrite = interaction.channel?.permissionOverwrites?.cache?.get(member.id);
+  return Boolean(overwrite && overwrite.type === 1);
+}
+
+async function handleTicketClaim(interaction) {
+  if (!canManageTicket(interaction)) {
+    await interaction.reply({ content: "Action réservée à l'équipe et au client du ticket.", flags: MessageFlags.Ephemeral });
+    return;
+  }
+  const source = interaction.message.embeds[0];
+  if (source) {
+    const embed = EmbedBuilder.from(source);
+    const fields = (source.fields ?? []).map((field) =>
+      field.name === "Statut"
+        ? { ...field, value: `Pris en charge par <@${interaction.user.id}>` }
+        : field,
+    );
+    embed.setFields(fields);
+    await interaction.message.edit({ embeds: [embed], components: interaction.message.components });
+  }
+  await interaction.reply({ content: "Tu as pris en charge ce ticket.", flags: MessageFlags.Ephemeral });
+}
+
+async function handleTicketClose(interaction) {
+  if (!canManageTicket(interaction)) {
+    await interaction.reply({ content: "Action réservée à l'équipe et au client du ticket.", flags: MessageFlags.Ephemeral });
+    return;
+  }
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId("ticket:close:confirm").setLabel("Confirmer la fermeture").setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId("ticket:close:cancel").setLabel("Annuler").setStyle(ButtonStyle.Secondary),
+  );
+  await interaction.reply({
+    content: "Confirmer la fermeture définitive de ce ticket ?",
+    components: [row],
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+async function handleTicketCloseConfirm(interaction) {
+  if (!canManageTicket(interaction)) {
+    await interaction.reply({ content: "Action non autorisée.", flags: MessageFlags.Ephemeral });
+    return;
+  }
+  await interaction.update({ content: "Fermeture du ticket…", components: [] });
+  await interaction.channel.delete(`Ticket fermé par ${interaction.user.tag}`).catch(async (error) => {
+    logger.error("Fermeture de ticket impossible", error);
+    await logError(interaction.client, "Fermeture de ticket impossible", error.message);
+  });
+}
+
 
 async function respondWithError(interaction, message) {
   const payload = { content: message, flags: MessageFlags.Ephemeral };
@@ -36,8 +95,14 @@ export default {
   async execute(interaction) {
     if (interaction.isButton()) {
       if (interaction.customId === "ticket:open") await handleTicketButton(interaction);
+      else if (interaction.customId === "ticket:claim") await handleTicketClaim(interaction);
+      else if (interaction.customId === "ticket:close") await handleTicketClose(interaction);
+      else if (interaction.customId === "ticket:close:confirm") await handleTicketCloseConfirm(interaction);
+      else if (interaction.customId === "ticket:close:cancel")
+        await interaction.update({ content: "Fermeture annulée.", components: [] });
       return;
     }
+
 
     if (!interaction.isChatInputCommand()) return;
 
