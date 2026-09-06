@@ -3,6 +3,14 @@ import { logger } from "../utils/logger.js";
 import { logError, logInfo } from "../services/logService.js";
 import { createTicketChannel } from "../services/ticketService.js";
 import { env } from "../config/env.js";
+import {
+  EMBED_MODAL_ID,
+  handleEmbedCancel,
+  handleEmbedChannelSelect,
+  handleEmbedConfirm,
+  handleEmbedModal,
+} from "../services/embedComposer.js";
+
 
 /** Autorisé si membre listé dans les permissions du salon ticket, rôle staff, ou admin. */
 function canManageTicket(interaction) {
@@ -93,6 +101,16 @@ async function handleTicketButton(interaction) {
 export default {
   name: Events.InteractionCreate,
   async execute(interaction) {
+    if (interaction.isModalSubmit()) {
+      if (interaction.customId === EMBED_MODAL_ID) await handleEmbedModal(interaction);
+      return;
+    }
+
+    if (interaction.isChannelSelectMenu()) {
+      if (interaction.customId === "embed:channel") await handleEmbedChannelSelect(interaction);
+      return;
+    }
+
     if (interaction.isButton()) {
       if (interaction.customId === "ticket:open") await handleTicketButton(interaction);
       else if (interaction.customId === "ticket:claim") await handleTicketClaim(interaction);
@@ -100,8 +118,11 @@ export default {
       else if (interaction.customId === "ticket:close:confirm") await handleTicketCloseConfirm(interaction);
       else if (interaction.customId === "ticket:close:cancel")
         await interaction.update({ content: "Fermeture annulée.", components: [] });
+      else if (interaction.customId === "embed:confirm") await handleEmbedConfirm(interaction);
+      else if (interaction.customId === "embed:cancel") await handleEmbedCancel(interaction);
       return;
     }
+
 
 
     if (!interaction.isChatInputCommand()) return;
