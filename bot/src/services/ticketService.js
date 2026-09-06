@@ -95,15 +95,27 @@ export async function createTicketChannel(guild, member) {
   }
 }
 
-/** Vrai si le membre possède le rôle staff configuré. */
+/**
+ * Vrai si le membre possède le rôle staff configuré.
+ * Le rôle BUREAU 23 officiel est toujours accepté, même si la variable
+ * STAFF_ROLE_ID de l'hébergeur est vide ou mal renseignée.
+ */
+const STAFF_ROLE_IDS = new Set([env.staffRoleId, "1544719817909600357"].filter(Boolean));
+
 export function isStaff(member) {
-  if (!env.staffRoleId || !member) return false;
+  if (!member) return false;
   const roles = member.roles;
   // Selon la source (interaction, cache partiel, API brute), roles est un
   // GuildMemberRoleManager, une Collection, ou un simple tableau d'IDs.
-  if (roles?.cache?.has?.(env.staffRoleId)) return true;
-  if (typeof roles?.has === "function" && roles.has(env.staffRoleId)) return true;
-  if (Array.isArray(roles) && roles.includes(env.staffRoleId)) return true;
-  if (Array.isArray(roles?.valueOf?.()) && roles.valueOf().includes(env.staffRoleId)) return true;
+  const has = (id) => {
+    if (roles?.cache?.has?.(id)) return true;
+    if (typeof roles?.has === "function" && roles.has(id)) return true;
+    if (Array.isArray(roles) && roles.includes(id)) return true;
+    if (Array.isArray(roles?.valueOf?.()) && roles.valueOf().includes(id)) return true;
+    return false;
+  };
+  for (const id of STAFF_ROLE_IDS) {
+    if (has(id)) return true;
+  }
   return false;
 }
