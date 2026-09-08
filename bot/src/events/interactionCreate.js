@@ -10,6 +10,7 @@ import {
   handleEmbedConfirm,
   handleEmbedModal,
 } from "../services/embedComposer.js";
+import { handleTicketFlow } from "../services/ticketFlow.js";
 
 
 /** Autorisé si membre listé dans les permissions du salon ticket, rôle staff, ou admin. */
