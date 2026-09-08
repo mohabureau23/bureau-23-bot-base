@@ -10,6 +10,7 @@ import {
   handleEmbedConfirm,
   handleEmbedModal,
 } from "../services/embedComposer.js";
+import { handleTicketFlow } from "../services/ticketFlow.js";
 
 
 /** Autorisé si membre listé dans les permissions du salon ticket, rôle staff, ou admin. */
@@ -101,6 +102,9 @@ async function handleTicketButton(interaction) {
 export default {
   name: Events.InteractionCreate,
   async execute(interaction) {
+    // Système de tickets BUREAU 23 (customId préfixé « t23: »).
+    if (typeof interaction.customId === "string" && (await handleTicketFlow(interaction))) return;
+
     if (interaction.isModalSubmit()) {
       if (interaction.customId === EMBED_MODAL_ID) await handleEmbedModal(interaction);
       return;
