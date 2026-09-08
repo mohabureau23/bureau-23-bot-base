@@ -12,7 +12,12 @@ logger.setLevel(env.logLevel);
 logger.debug("Configuration chargée", safeEnvSummary());
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
   partials: [Partials.GuildMember],
 });
 
