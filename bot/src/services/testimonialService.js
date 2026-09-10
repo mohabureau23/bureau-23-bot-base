@@ -63,9 +63,49 @@ export async function publishTestimonial(client, { payload, rating, message, dis
   return true;
 }
 
-/** Bouton « Laisser un témoignage » (le lien reste hors des logs). */
+/** Bouton « ⭐ Laisser un témoignage » (le lien reste hors des logs). */
 export function testimonialButtonRow(url) {
   return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("Laisser un témoignage").setURL(url),
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("⭐ Laisser un témoignage").setURL(url),
   );
+}
+
+/**
+ * Publie dans le salon témoignages un avis validé côté Bureau 23 Hub.
+ * Aucun jeton n'est affiché.
+ */
+export async function publishHubReview(client, { rating, message, displayName, discordUserId, projectName, link }) {
+  if (!env.testimonialChannelId) {
+    throw new Error("TESTIMONIAL_CHANNEL_ID n'est pas configuré.");
+  }
+
+  const channel = await client.channels.fetch(env.testimonialChannelId).catch(() => null);
+  if (!channel?.isTextBased?.()) {
+    await logError(client, "Salon témoignages introuvable", "TESTIMONIAL_CHANNEL_ID invalide.");
+    throw new Error("Salon de témoignages introuvable.");
+  }
+
+  const note = Number(rating);
+  const stars = note >= 1 && note <= 5 ? "⭐".repeat(note) + "☆".repeat(5 - note) : null;
+  const author = discordUserId ? `<@${discordUserId}>` : displayName || "Client";
+
+  const fields = [];
+  if (stars) fields.push({ name: "Note", value: `${stars} (${note}/5)`, inline: true });
+  if (projectName) fields.push({ name: "Projet", value: `\`${projectName}\``, inline: true });
+  fields.push({ name: "Date", value: `<t:${Math.floor(Date.now() / 1000)}:D>`, inline: true });
+
+  const body = String(message).slice(0, 1500);
+  const embed = baseEmbed({
+    title: "Nouveau témoignage client",
+    description: `**Client :** ${author}\n\n> ${body.replace(/\n/g, "\n> ")}${
+      link ? `\n\n[Voir sur Bureau 23 Hub](${link})` : ""
+    }`,
+    color: COLORS.success,
+    fields,
+  });
+
+  await channel.send({ embeds: [embed] });
+  await logInfo(client, "Témoignage publié (Hub)", `Projet : ${projectName ?? "n/a"}`);
+  logger.info("Témoignage Hub publié");
+  return true;
 }
