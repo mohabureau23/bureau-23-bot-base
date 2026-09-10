@@ -22,6 +22,8 @@ const OPTIONAL = [
   "ADMIN_API_SECRET",
   "HUB_API_SECRET",
   "TESTIMONIAL_TOKEN_SECRET",
+  "REVIEW_HUB_URL",
+  "REVIEW_API_KEY",
 ];
 
 function readEnv() {
@@ -76,6 +78,10 @@ function readEnv() {
     // invalides au redémarrage (jamais de secret en dur dans le dépôt).
     tokenSecret: process.env.TESTIMONIAL_TOKEN_SECRET?.trim() || randomBytes(32).toString("hex"),
 
+    // Bureau 23 Hub — témoignages temporaires (appel serveur-à-serveur uniquement)
+    reviewHubUrl: (process.env.REVIEW_HUB_URL?.trim() || "").replace(/\/+$/, "") || null,
+    reviewApiKey: process.env.REVIEW_API_KEY?.trim() || null,
+
     logLevel: process.env.LOG_LEVEL?.trim() || "info",
     missingOptional,
   };
@@ -100,6 +106,8 @@ export function safeEnvSummary() {
     adminApiSecret: env.adminApiSecret ? "***set***" : null,
     hubApiSecret: env.hubApiSecret ? "***set***" : null,
     tokenSecret: "***redacted***",
+    reviewHubUrl: env.reviewHubUrl,
+    reviewApiKey: env.reviewApiKey ? "***set***" : null,
     logLevel: env.logLevel,
     token: "***redacted***",
   };
