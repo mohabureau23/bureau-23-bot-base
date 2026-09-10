@@ -106,6 +106,8 @@ export function safeEnvSummary() {
     adminApiSecret: env.adminApiSecret ? "***set***" : null,
     hubApiSecret: env.hubApiSecret ? "***set***" : null,
     tokenSecret: "***redacted***",
+    reviewHubUrl: env.reviewHubUrl,
+    reviewApiKey: env.reviewApiKey ? "***set***" : null,
     logLevel: env.logLevel,
     token: "***redacted***",
   };
