@@ -78,6 +78,10 @@ function readEnv() {
     // invalides au redémarrage (jamais de secret en dur dans le dépôt).
     tokenSecret: process.env.TESTIMONIAL_TOKEN_SECRET?.trim() || randomBytes(32).toString("hex"),
 
+    // Bureau 23 Hub — témoignages temporaires (appel serveur-à-serveur uniquement)
+    reviewHubUrl: (process.env.REVIEW_HUB_URL?.trim() || "").replace(/\/+$/, "") || null,
+    reviewApiKey: process.env.REVIEW_API_KEY?.trim() || null,
+
     logLevel: process.env.LOG_LEVEL?.trim() || "info",
     missingOptional,
   };
