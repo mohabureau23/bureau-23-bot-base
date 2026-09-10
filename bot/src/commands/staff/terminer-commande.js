@@ -3,6 +3,9 @@ import { env } from "../../config/env.js";
 import { baseEmbed, COLORS } from "../../utils/embeds.js";
 import { isStaff } from "../../services/ticketService.js";
 import { createTestimonialLink, testimonialButtonRow } from "../../services/testimonialService.js";
+import { isReviewHubConfigured, requestReviewLink } from "../../services/reviewHubService.js";
+import { logger } from "../../utils/logger.js";
+import { logError } from "../../services/logService.js";
 
 /** Déduit le client d'un salon « commande-pseudo » via ses permissions. */
 async function detectClient(interaction) {
