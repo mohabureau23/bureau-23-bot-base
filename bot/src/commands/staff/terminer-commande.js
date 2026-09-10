@@ -53,16 +53,43 @@ export default {
     const reference =
       interaction.options.getString("reference") ?? interaction.channel?.name ?? `cmd-${interaction.id}`;
 
-    const { url } = createTestimonialLink({
-      reference,
-      clientName: client?.user?.username ?? null,
-      discordUserId: client?.id ?? null,
-      source: "discord",
-    });
+    // 1) Lien temporaire fourni par Bureau 23 Hub (serveur-à-serveur).
+    // 2) Repli sur le lien interne si le Hub est indisponible.
+    // 3) Aucun cas ne bloque la clôture de la commande.
+    let url = null;
+    let warning = null;
+
+    if (isReviewHubConfigured()) {
+      const hub = await requestReviewLink({
+        discordUserId: client?.id ?? null,
+        discordUsername: client?.user?.username ?? null,
+        projectName: reference,
+        orderId: reference,
+      });
+      if (hub.ok) url = hub.url;
+      else warning = hub.reason;
+    }
+
+    if (!url) {
+      try {
+        url = createTestimonialLink({
+          reference,
+          clientName: client?.user?.username ?? null,
+          discordUserId: client?.id ?? null,
+          source: "discord",
+        }).url;
+      } catch (error) {
+        warning = `${warning ? `${warning} — ` : ""}lien interne indisponible (${error.message})`;
+      }
+    }
 
     const embed = baseEmbed({
       title: "Commande terminée ✅",
-      description: `${client ? `${client}, ` : ""}merci pour ta confiance !\nTu peux laisser un témoignage via le bouton ci-dessous (lien personnel, valable 7 jours, une seule utilisation).`,
+      description: `${client ? `${client}, ` : ""}merci pour ta confiance !${
+        url
+          ? "\nTu peux laisser un témoignage via le bouton ci-dessous (lien personnel, temporaire, une seule utilisation)."
+          : "\nLe lien de témoignage sera transmis très prochainement."
+      }`,
       color: COLORS.success,
       fields: [{ name: "Référence", value: `\`${reference}\`` }],
     });
@@ -70,11 +97,18 @@ export default {
     await interaction.channel.send({
       content: client ? `${client}` : undefined,
       embeds: [embed],
-      components: [testimonialButtonRow(url)],
+      ...(url ? { components: [testimonialButtonRow(url)] } : {}),
     });
 
+    if (warning) {
+      logger.warn(`Témoignage Hub indisponible : ${warning}`);
+      await logError(interaction.client, "Lien de témoignage", warning).catch(() => {});
+    }
+
     await interaction.editReply(
-      `Commande \`${reference}\` marquée terminée. Lien de témoignage envoyé dans le salon${client ? ` pour ${client.user.tag}` : ""}.`,
+      `Commande \`${reference}\` marquée terminée${client ? ` pour ${client.user.tag}` : ""}.${
+        url ? " Lien de témoignage envoyé dans le salon." : ""
+      }${warning ? `\n⚠️ ${warning}` : ""}`,
     );
   },
 };
