@@ -22,6 +22,8 @@ const OPTIONAL = [
   "ADMIN_API_SECRET",
   "HUB_API_SECRET",
   "TESTIMONIAL_TOKEN_SECRET",
+  "REVIEW_HUB_URL",
+  "REVIEW_API_KEY",
 ];
 
 function readEnv() {
