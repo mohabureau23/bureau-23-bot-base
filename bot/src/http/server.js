@@ -159,6 +159,27 @@ export function startHttpServer(client) {
         return json(res, 200, { ok: true, testimonialUrl: link.url, expiresAt: link.expiresAt });
       }
 
+      // ---- Hub : témoignage validé (webhook sécurisé, Bearer REVIEW_API_KEY) ----
+      if (pathname === "/api/reviews/published" && req.method === "POST") {
+        const provided = String(req.headers.authorization ?? "").replace(/^Bearer\s+/i, "");
+        if (!env.reviewApiKey || !safeEqual(provided, env.reviewApiKey)) {
+          return json(res, 401, { error: "unauthorized" });
+        }
+        const body = JSON.parse((await readBody(req)) || "{}");
+        const message = typeof body.message === "string" ? body.message.trim() : "";
+        if (message.length < 5) return json(res, 400, { error: "message requis" });
+
+        await publishHubReview(client, {
+          rating: body.rating ?? null,
+          message,
+          displayName: body.discordUsername ? String(body.discordUsername).slice(0, 60) : null,
+          discordUserId: body.discordUserId ? String(body.discordUserId) : null,
+          projectName: body.projectName ? String(body.projectName).slice(0, 100) : null,
+          link: typeof body.link === "string" && /^https?:\/\//i.test(body.link) ? body.link : null,
+        });
+        return json(res, 200, { ok: true });
+      }
+
       // ---- Admin (mini-site) ----
       if (pathname.startsWith("/api/admin/")) {
         if (!env.adminApiSecret || !safeEqual(req.headers["x-admin-secret"], env.adminApiSecret)) {
